@@ -1,0 +1,12 @@
+{
+  "metamask": {
+    "toast": {
+      "no_metamask_des": "Please install or enable it first",
+      "no_metamask_title": "Transaction Failed",
+      "pending_des": "Your Metamask already processing a transaction, please finish or remove it before doing new transaction",
+      "pending_title": "Transaction Failed",
+      "unexcepted_des": "Please try again later",
+      "unexcepted_title": "Unexcepted Error"
+    }
+  }
+}
