@@ -48,7 +48,7 @@
     <button
       class="btn btn-more"
     >
-      Read More
+      Get More
     </button>
   </div>
 </template>
