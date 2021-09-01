@@ -4,6 +4,7 @@ interface IState {
   isAccountLocked: boolean;
   isMonitoringAccount: boolean;
   activeAddress: string | null;
+  quantity: number | null;
 }
 
 const initialState = () => (<IState>{
@@ -12,6 +13,7 @@ const initialState = () => (<IState>{
   isAccountLocked: false,
   isMonitoringAccount: false,
   activeAddress: null,
+  quantity: null,
 });
 
 const getters: { [key: string]: any } = {
@@ -29,6 +31,9 @@ const getters: { [key: string]: any } = {
   },
   activeAddress(state: IState) {
     return state.activeAddress;
+  },
+  quantity(state: IState) {
+    return state.quantity;
   },
 };
 
@@ -57,6 +62,9 @@ const mutations = {
   },
   setActiveAddress(state: IState, value: string | null) {
     state.activeAddress = value;
+  },
+  setquantity(state: IState, value: number | null) {
+    state.quantity = value;
   },
 };
 

@@ -20,33 +20,43 @@
       </button>
     </div>
     <div class="collections-list">
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
+      <div
+        v-if="metadataList?.length > 0"
+        class="bought-result"
       >
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
+        <i
+          class="close"
+          @click="metadataList = []"
+        />
+        <div
+          v-for="(data, index) in metadataList"
+          :key="index"
+          class="nft-card"
+        >
+          <img
+            :style="{opacity: (isLoading) ? 0 : 1}"
+            class="nft-card-img"
+            :src="data?.image"
+            @load="isLoading = false"
+          >
+          <Skeletor
+            :style="{opacity: (isLoading) ? 1 : 0}"
+            class="nft-card-skeletor"
+          />
+          <div class="nft-card-footer">
+            {{ data?.name }}
+          </div>
+        </div>
+      </div>
+      <div
+        v-else
       >
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
-      >
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
-      >
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
-      >
-      <img
-        src="@img/Frame.png"
-        alt="owl-collections"
-      >
+        No NFTs to display
+      </div>
     </div>
     <button
       class="btn btn-more"
+      @click="$router.push('/more')"
     >
       Get More
     </button>
@@ -54,20 +64,70 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, computed } from 'vue';
+import { IReceipt, ITokenMetadata } from '@type/interface';
+import axios from '@util/axios';
+import {
+  defineComponent, onMounted, computed, ref, reactive,
+} from 'vue';
 import { useStore } from 'vuex';
+import { Skeletor } from 'vue-skeletor';
+import Metamask from '@/utils/metamask';
+import toast from '@/utils/toast';
+import { ToastType } from '@/types/enums';
+import 'vue-skeletor/dist/vue-skeletor.css';
+
+const ContractABI = require('@/assets/abi/owls-uat.json');
+
+const CONTRACT_ADDRESS = process.env.VUE_APP_CONTRACT_ADDRESS;
 
 export default defineComponent({
   name: 'Collections',
+  components: { Skeletor },
   setup() {
+    const contract = Metamask.initContract(ContractABI, CONTRACT_ADDRESS);
+    const metadataList = ref<ITokenMetadata[]>([]);
     const store = useStore();
     const activeAddress = computed(() => store.getters['data/activeAddress']);
-    onMounted(() => {
-      //
+    const quantity = computed(() => store.getters['data/quantity']);
+    const input = reactive({
+      amount: 1,
+      toAddress: null,
+      transferTokenID: null,
+      address: null,
+      tokenID: null,
+      quantity: 1,
     });
 
+    const walletOfOwner = async (address: string): Promise<string[]> => {
+      const result: string[] = await contract?.methods.walletOfOwner(address).call() || [];
+      return result;
+    };
+
+    const getMetaData = async (tokenID: string): Promise<ITokenMetadata> => {
+      const result = await contract?.methods.tokenURI(tokenID).call();
+      return (await axios.get(result))?.data;
+    };
+    onMounted(async () => {
+      //
+      const tokenList = await walletOfOwner(activeAddress.value);
+      const cacheList: Promise<ITokenMetadata>[] = [];
+      for (let index = tokenList.length - quantity.value; index < tokenList.length; index += 1) {
+        cacheList.push(getMetaData(tokenList[index]));
+      }
+      try {
+        metadataList.value = await Promise.all(cacheList);
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: 'Server Error',
+          type: ToastType.FAILED,
+        });
+      }
+    });
     return {
       activeAddress,
+      input,
+      metadataList,
     };
   },
 });

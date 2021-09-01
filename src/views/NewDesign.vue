@@ -95,6 +95,7 @@ export default defineComponent({
       transferTokenID: null,
       address: null,
       tokenID: null,
+      qty: null,
     });
 
     const store = useStore();
