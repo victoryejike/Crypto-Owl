@@ -110,18 +110,23 @@ export default defineComponent({
     onMounted(async () => {
       //
       const tokenList = await walletOfOwner(activeAddress.value);
-      const cacheList: Promise<ITokenMetadata>[] = [];
-      for (let index = tokenList.length - quantity.value; index < tokenList.length; index += 1) {
-        cacheList.push(getMetaData(tokenList[index]));
-      }
-      try {
-        metadataList.value = await Promise.all(cacheList);
-      } catch (error) {
-        console.error(error);
-        toast({
-          title: 'Server Error',
-          type: ToastType.FAILED,
-        });
+      if (tokenList.length > 0) {
+        const cacheList: Promise<ITokenMetadata>[] = [];
+        console.log(quantity.value);
+        for (let index = tokenList.length - quantity.value; index < tokenList.length; index += 1) {
+          cacheList.push(getMetaData(tokenList[index]));
+        }
+        try {
+          metadataList.value = await Promise.all(cacheList);
+        } catch (error) {
+          console.error(error);
+          toast({
+            title: 'Server Error',
+            type: ToastType.FAILED,
+          });
+        }
+      } else {
+        console.log(tokenList);
       }
     });
     return {
