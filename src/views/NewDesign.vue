@@ -26,6 +26,14 @@
           src="@img/icon-twitter.png"
         >
       </div>
+      <button
+        v-if="activeAddress"
+        type="button"
+        class="btn btn-collection"
+        @click="$router.push('/collections')"
+      >
+        View Your Collection
+      </button>
     </div>
     <button
       class="btn btn-wallet"
@@ -41,9 +49,10 @@
         v-if="activeAddress"
         class="btn-text"
       >
-        `${activeAddress}`
+        {{ `${activeAddress}` }}
       </span>
       <span
+        v-else
         class="btn-text"
       >
         Connect<br>Metamask
@@ -255,6 +264,11 @@ export default defineComponent({
   color: #fff;
   border: 1px solid #fff;
   border-radius: 100px;
+}
+
+.btn-collection {
+  display: block;
+  background-color: #ECEAE1;
 }
 
 .btn-text {
