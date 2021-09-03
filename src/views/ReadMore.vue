@@ -62,6 +62,7 @@ import {
   computed,
   defineComponent, onMounted, reactive, ref,
 } from 'vue';
+import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import Web3 from 'web3';
 import Metamask from '@/utils/metamask';
@@ -84,15 +85,9 @@ export default defineComponent({
     const contract = Metamask.initContract(ContractABI, CONTRACT_ADDRESS);
     const metadataList = ref<ITokenMetadata[]>([]);
     const store = useStore();
+    const router = useRouter();
     const activeAddress = computed(() => store.getters['data/activeAddress']);
-
-    const input = reactive({
-      amount: 1,
-      toAddress: null,
-      transferTokenID: null,
-      address: null,
-      tokenID: null,
-    });
+    const quantity = computed(() => store.getters['data/quantity']);
 
     const mintButton = ref(true);
     const qty = ref(1);
@@ -122,6 +117,17 @@ export default defineComponent({
       }
       return true;
     };
+    const newQuantity = (quantity.value + qty.value);
+    store.commit('data/setquantity', newQuantity);
+    console.log(quantity.value);
+
+    const input = reactive({
+      amount: newQuantity,
+      toAddress: null,
+      transferTokenID: null,
+      address: null,
+      tokenID: null,
+    });
     const walletOfOwner = async (address: string): Promise<string[]> => {
       const result: string[] = await contract?.methods.walletOfOwner(address).call() || [];
       return result;
@@ -133,7 +139,6 @@ export default defineComponent({
     };
     const mint = async (amount: number) => {
       if (!isConnected()) { return; }
-      store.commit('data/setquantity', qty);
       await contract?.methods.mint(activeAddress.value, amount)
         .send({ from: activeAddress.value, value: Web3.utils.toWei((amount * pricePerNFT).toString()) })
         .once('transactionHash', (hash: string) => {
@@ -157,6 +162,8 @@ export default defineComponent({
             }
             try {
               metadataList.value = await Promise.all(cacheList);
+              store.commit('data/setnfts', metadataList);
+              router.push('/congratulations');
             } catch (error) {
               console.error(error);
               toast({
@@ -190,41 +197,6 @@ export default defineComponent({
       handleConnect,
     };
   },
-  // data() {
-  //   return {
-  //     mintButton: true,
-  //     qty: 1,
-  //   };
-  // },
-  // methods: {
-  //   showQty() {
-  //     this.mintButton = false;
-  //   },
-  //   add() {
-  //     this.qty += 1;
-  //     console.log(this.qty);
-  //   },
-  //   minus() {
-  //     if (this.qty === 0) {
-  //       this.qty = 0;
-  //     } else {
-  //       this.qty -= 1;
-  //     }
-  //   },
-  //   async confirm() {
-  //     console.log('confirm');
-  //     const address = await Metamask.getActiveAddress();
-  //     const store = useStore();
-  //     if (address) {
-  //       store.commit('data/setActiveAddress', address);
-  //       store.commit('data/setIsAccountLocked', false);
-  //       Metamask.detectingAccount();
-  //     }
-  //   },
-  //   reject() {
-  //     this.mintButton = true;
-  //   },
-  // },
 });
 </script>
 

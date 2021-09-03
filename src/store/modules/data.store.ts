@@ -5,6 +5,7 @@ interface IState {
   isMonitoringAccount: boolean;
   activeAddress: string | null;
   quantity: number | null;
+  nfts: [] | null;
 }
 
 const initialState = () => (<IState>{
@@ -14,6 +15,7 @@ const initialState = () => (<IState>{
   isMonitoringAccount: false,
   activeAddress: null,
   quantity: null,
+  nfts: null,
 });
 
 const getters: { [key: string]: any } = {
@@ -34,6 +36,9 @@ const getters: { [key: string]: any } = {
   },
   quantity(state: IState) {
     return state.quantity;
+  },
+  nfts(state: IState) {
+    return state.nfts;
   },
 };
 
@@ -65,6 +70,9 @@ const mutations = {
   },
   setquantity(state: IState, value: number | null) {
     state.quantity = value;
+  },
+  setnfts(state: IState, value: [] | null) {
+    state.nfts = value;
   },
 };
 

@@ -50,8 +50,9 @@
       </div>
       <div
         v-else
+        class="no-nft"
       >
-        No NFTs to display
+        No New NFTs to display
       </div>
     </div>
     <button
@@ -64,75 +65,47 @@
 </template>
 
 <script lang="ts">
-import { IReceipt, ITokenMetadata } from '@type/interface';
-import axios from '@util/axios';
+import { ITokenMetadata } from '@type/interface';
 import {
   defineComponent, onMounted, computed, ref, reactive,
 } from 'vue';
 import { useStore } from 'vuex';
 import { Skeletor } from 'vue-skeletor';
 import Metamask from '@/utils/metamask';
-import toast from '@/utils/toast';
-import { ToastType } from '@/types/enums';
 import 'vue-skeletor/dist/vue-skeletor.css';
-
-const ContractABI = require('@/assets/abi/owls-uat.json');
-
-const CONTRACT_ADDRESS = process.env.VUE_APP_CONTRACT_ADDRESS;
 
 export default defineComponent({
   name: 'Collections',
   components: { Skeletor },
   setup() {
-    const contract = Metamask.initContract(ContractABI, CONTRACT_ADDRESS);
     const metadataList = ref<ITokenMetadata[]>([]);
     const store = useStore();
     const activeAddress = computed(() => store.getters['data/activeAddress']);
-    const quantity = computed(() => store.getters['data/quantity']);
+    const nfts = computed(() => store.getters['data/nfts']);
     const input = reactive({
       amount: 1,
       toAddress: null,
       transferTokenID: null,
       address: null,
       tokenID: null,
-      quantity: 1,
     });
 
-    const walletOfOwner = async (address: string): Promise<string[]> => {
-      const result: string[] = await contract?.methods.walletOfOwner(address).call() || [];
-      return result;
-    };
-
-    const getMetaData = async (tokenID: string): Promise<ITokenMetadata> => {
-      const result = await contract?.methods.tokenURI(tokenID).call();
-      return (await axios.get(result))?.data;
-    };
     onMounted(async () => {
       //
-      const tokenList = await walletOfOwner(activeAddress.value);
-      if (tokenList.length > 0) {
-        const cacheList: Promise<ITokenMetadata>[] = [];
-        console.log(quantity.value);
-        for (let index = tokenList.length - quantity.value; index < tokenList.length; index += 1) {
-          cacheList.push(getMetaData(tokenList[index]));
-        }
-        try {
-          metadataList.value = await Promise.all(cacheList);
-        } catch (error) {
-          console.error(error);
-          toast({
-            title: 'Server Error',
-            type: ToastType.FAILED,
-          });
-        }
-      } else {
-        console.log(tokenList);
+      const address = await Metamask.getActiveAddress();
+      if (address) {
+        store.commit('data/setActiveAddress', address);
+        store.commit('data/setIsAccountLocked', false);
+        Metamask.detectingAccount();
       }
+
+      metadataList.value = nfts.value;
     });
     return {
       activeAddress,
       input,
       metadataList,
+      // handleConnect,
     };
   },
 });
@@ -146,7 +119,7 @@ export default defineComponent({
   /* display: flex; */
   min-height: 100vh;
   overflow: hidden;
-  width: 100vw;
+  max-width: 100vw;
 }
 
 .collections-padding {
@@ -156,13 +129,23 @@ export default defineComponent({
   padding: 6rem 5rem;
 }
 
-.collections-list {
+.no-nft {
+  text-align: center;
+}
+
+.bought-result {
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
 
-  & > * {
-    margin: 6rem;
+  .nft-card {
+    padding: 1rem;
+    width: 30%;
+  }
+
+  .nft-card-img {
+    width: 100%;
   }
 }
 

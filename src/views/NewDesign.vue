@@ -17,14 +17,18 @@
       </button>
       <div class="social-media-div">
         <span>Share:</span>
-        <img
-          class="social-media-icon"
-          src="@img/icon-opensea.png"
-        >
-        <img
-          class="social-media-icon"
-          src="@img/icon-twitter.png"
-        >
+        <a href="https://opensea.io">
+          <img
+            class="social-media-icon"
+            src="@img/icon-opensea.png"
+          >
+        </a>
+        <a href="https://twitter.com">
+          <img
+            class="social-media-icon"
+            src="@img/icon-twitter.png"
+          >
+        </a>
       </div>
       <button
         v-if="activeAddress"
@@ -64,12 +68,10 @@
 <script lang="ts">
 // import { defineComponent } from 'vue';
 import { IReceipt, ITokenMetadata } from '@type/interface';
-import axios from '@util/axios';
 import {
   computed,
   defineComponent, onMounted, reactive, ref,
 } from 'vue';
-import Web3 from 'web3';
 import { useStore } from 'vuex';
 import Metamask from '@/utils/metamask';
 import toast from '@/utils/toast';
@@ -79,12 +81,11 @@ import 'vue-skeletor/dist/vue-skeletor.css';
 const ContractABI = require('@/assets/abi/owls-uat.json');
 
 const CONTRACT_ADDRESS = process.env.VUE_APP_CONTRACT_ADDRESS;
-const pricePerNFT = 0.03;
 
 export default defineComponent({
   name: 'ViewTemplate',
   setup(props, { attrs, slots, emit }) {
-    let closeMsg: () => void | null;
+    // let closeMsg: () => void | null;
     const totalBuy = ref(1);
     const isLoading = ref(true);
     const contract = Metamask.initContract(ContractABI, CONTRACT_ADDRESS);
@@ -111,57 +112,6 @@ export default defineComponent({
       }
       return true;
     };
-
-    const walletOfOwner = async (address: string): Promise<string[]> => {
-      const result: string[] = await contract?.methods.walletOfOwner(address).call() || [];
-      return result;
-    };
-
-    const getMetaData = async (tokenID: string): Promise<ITokenMetadata> => {
-      const result = await contract?.methods.tokenURI(tokenID).call();
-      return (await axios.get(result))?.data;
-    };
-
-    const mint = async (amount: number) => {
-      if (!isConnected()) { return; }
-
-      await contract?.methods.mint(activeAddress.value, amount)
-        .send({ from: activeAddress.value, value: Web3.utils.toWei((amount * pricePerNFT).toString()) })
-        .once('transactionHash', (hash: string) => {
-          closeMsg = toast({
-            title: 'Waiting the transaction write into the blockchain...',
-            type: ToastType.LOADING,
-            timeout: -1,
-          });
-        })
-        .once('receipt', async (receipt: IReceipt) => {
-          closeMsg();
-          if (receipt.status) {
-            toast({
-              title: 'Transaction Succeed',
-              type: ToastType.SUCCESS,
-            });
-            const tokenList = await walletOfOwner(activeAddress.value);
-            const cacheList: Promise<ITokenMetadata>[] = [];
-            for (let index = tokenList.length - amount; index < tokenList.length; index += 1) {
-              cacheList.push(getMetaData(tokenList[index]));
-            }
-            try {
-              metadataList.value = await Promise.all(cacheList);
-            } catch (error) {
-              console.error(error);
-              toast({
-                title: 'Server Error',
-                type: ToastType.FAILED,
-              });
-            }
-          }
-        })
-        .on('error', (error: Error) => {
-          console.error(error);
-        });
-    };
-
     const transferFrom = async (to: string, tokenID: string) => {
       if (!isConnected()) { return; }
 
@@ -187,10 +137,6 @@ export default defineComponent({
       }
     };
 
-    const setTotoalBuy = (total: number) => {
-      if (total > 0 && total < 21) { totalBuy.value = total; }
-    };
-
     onMounted(async () => {
       if (await Metamask.detectingChain()) {
         Metamask.initAccount();
@@ -199,16 +145,13 @@ export default defineComponent({
     });
 
     return {
-      mint,
       transferFrom,
-      walletOfOwner,
       handleConnect,
       isLoading,
       metadataList,
       input,
       activeAddress,
       totalBuy,
-      setTotoalBuy,
     };
   },
 });
