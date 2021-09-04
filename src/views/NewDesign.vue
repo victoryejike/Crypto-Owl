@@ -1,8 +1,16 @@
 <template>
-  <div class="index-container">
+  <div
+    class="index-container"
+  >
     <div class="index-padding">
       <h1 class="index-title">
         Hatch and Grow your crypto owls
+        <div class="owl-container">
+          <img
+            class="owl-popout"
+            src="@img/Owl-Blue.png"
+          >
+        </div>
       </h1>
       <div class="index-description">
         Crypto Owl is the hero flying around the fun, vibrant and adventurous OWL World metaverse found in the vast
@@ -37,6 +45,12 @@
         @click="$router.push('/collections')"
       >
         View Your Collection
+        <div class="owl-container">
+          <img
+            class="owl-pop"
+            src="@img/Owl-Bronze.png"
+          >
+        </div>
       </button>
     </div>
     <button
@@ -61,6 +75,12 @@
       >
         Connect<br>Metamask
       </span>
+      <div class="owl-container">
+        <img
+          class="owl-popin"
+          src="@img/Owl-Green.png"
+        >
+      </div>
     </button>
   </div>
 </template>
@@ -137,11 +157,53 @@ export default defineComponent({
       }
     };
 
+    const popblue = () => {
+      const popout = document.querySelector('.owl-popout');
+      console.log(popout);
+      popout?.classList.add('owl-blue');
+      popout?.classList.add('owl-blue-transition');
+      setTimeout(() => {
+        popout?.classList.remove('owl-blue');
+        popout?.classList.remove('owl-blue-transition');
+      }, 6000);
+    };
+
+    const popgreen = () => {
+      const popin = document.querySelector('.owl-popin');
+      console.log(popin);
+      popin?.classList.add('owl-green');
+      popin?.classList.add('owl-green-transition');
+      setTimeout(() => {
+        popin?.classList.remove('owl-green');
+        popin?.classList.remove('owl-green-transition');
+      }, 2000);
+    };
+
+    const popbronze = () => {
+      const pop = document.querySelector('.owl-pop');
+      console.log(pop);
+      // pop?.classList.add('owl-green');
+      pop?.classList.add('owl-bronze');
+      setTimeout(() => {
+        pop?.classList.remove('owl-bronze');
+      }, 4000);
+    };
+
+    const loopOwls = () => {
+      // pop();
+      setInterval(popblue, 7000);
+      setInterval(popgreen, 3000);
+      setInterval(popbronze, 5000);
+    };
+
+    loopOwls();
+
     onMounted(async () => {
       if (await Metamask.detectingChain()) {
         Metamask.initAccount();
         Metamask.detectingAccount();
       }
+      loopOwls();
     });
 
     return {
@@ -152,6 +214,7 @@ export default defineComponent({
       input,
       activeAddress,
       totalBuy,
+      loopOwls,
     };
   },
 });
@@ -166,6 +229,7 @@ export default defineComponent({
   height: 100vh;
   overflow: hidden;
   width: 100vw;
+  position: relative;
 }
 
 .index-padding {
@@ -174,8 +238,10 @@ export default defineComponent({
 }
 
 .index-title {
+  position: relative;
   font-size: 2rem;
   width: 26rem;
+  z-index: 1000;
 }
 
 .index-description {
@@ -190,11 +256,12 @@ export default defineComponent({
   border-radius: 0.2em;
   border-width: 0;
   color: #000;
-  cursor: pointer;
   font-size: 0.8em;
   margin-top: 4rem;
   outline: 0;
   padding: 0.9em 2em;
+  position: relative;
+  z-index: 100;
 }
 
 .btn-wallet {
@@ -244,5 +311,51 @@ export default defineComponent({
 
 .social-media-icon:active {
   transform: translateY(0.1em);
+}
+
+.owl-container {
+  position: absolute;
+  display: block;
+  width: 50%;
+  height: 50%;
+}
+
+.owl-blue-transition {
+  /* display: none; */
+  transition: all .4s;
+  transform: rotateZ(180deg);
+}
+
+.owl-green-transition {
+  transition: all .4s;
+  transform: translate(50%, 50%);
+}
+
+.owl-blue {
+  bottom: 6.4rem;
+  left: 0rem;
+  z-index: -1;
+  /* transform: rotateZ(-45deg); */
+  width: 10rem;
+  position: absolute;
+  /* transition: all .2s; */
+}
+
+.owl-bronze {
+  top: 2rem;
+  left: 8rem;
+  z-index: -1;
+  width: 18rem;
+  position: absolute;
+  transform: rotateZ(45deg) translate(-10%, -10%);
+}
+
+.owl-green {
+  bottom: 1rem;
+  right: -15rem;
+  z-index: -1;
+  width: 10rem;
+  position: absolute;
+  transform: rotateZ(45deg) ;
 }
 </style>
