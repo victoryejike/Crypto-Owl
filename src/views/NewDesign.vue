@@ -53,35 +53,58 @@
         </div>
       </button>
     </div>
-    <button
-      class="btn btn-wallet"
-      :class="activeAddress ? 'btn-disable' : null"
-      @click="handleConnect"
-    >
-      <img
-        src="@img/metamask.png"
-        alt="metamask logo"
-        class="metamask-logo"
+    <div>
+      <button
+        class="btn btn-wallet"
+        :class="activeAddress ? 'btn-disable' : null"
+        @click="handleConnect"
       >
-      <span
-        v-if="activeAddress"
-        class="btn-text"
-      >
-        {{ `${activeAddress}` }}
-      </span>
-      <span
-        v-else
-        class="btn-text"
-      >
-        Connect<br>Metamask
-      </span>
-      <div class="owl-container">
+        <div class="owl-container">
+          <img
+            class="owl-popin"
+            src="@img/Owl-Green.png"
+          >
+        </div>
         <img
-          class="owl-popin"
-          src="@img/Owl-Green.png"
+          src="@img/metamask.png"
+          alt="metamask logo"
+          class="metamask-logo"
         >
+        <span
+          v-if="activeAddress"
+          class="btn-text"
+        >
+          {{ `${activeAddress}` }}
+        </span>
+        <span
+          v-else
+          class="btn-text"
+        >
+          Connect<br>Metamask
+        </span>
+      </button>
+      <div
+        v-if="(1000 <= totalMint) && (totalMint < 10101)"
+        class="totalMint"
+      >
+        <div class="hatched">
+          <h3>Hatched Eggs</h3>
+          {{ `${totalMint}` }}
+        </div>
+        <div class="remnant">
+          <h3>Remaining Eggs</h3>
+          {{ 10101 - `${totalMint}` }}
+        </div>
       </div>
-    </button>
+      <div
+        v-else-if="totalMint === 10101"
+        class="totalMint"
+      >
+        <div class="sold">
+          <h3>All Eggs Sold Out</h3>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -108,6 +131,7 @@ export default defineComponent({
     // let closeMsg: () => void | null;
     const totalBuy = ref(1);
     const isLoading = ref(true);
+    const totalMint = ref(0);
     const contract = Metamask.initContract(ContractABI, CONTRACT_ADDRESS);
     const metadataList = ref<ITokenMetadata[]>([]);
     const input = reactive({
@@ -121,6 +145,12 @@ export default defineComponent({
 
     const store = useStore();
     const activeAddress = computed(() => store.getters['data/activeAddress']);
+
+    const hatchedEggs = async () => {
+      const hatchedEgg = await contract?.methods.totalMint().call();
+      console.log(hatchedEgg);
+      totalMint.value = hatchedEgg;
+    };
 
     const isConnected = () => {
       if (!activeAddress.value) {
@@ -159,7 +189,7 @@ export default defineComponent({
 
     const popblue = () => {
       const popout = document.querySelector('.owl-popout');
-      console.log(popout);
+      // console.log(popout);
       popout?.classList.add('owl-blue');
       popout?.classList.add('owl-blue-transition');
       setTimeout(() => {
@@ -170,7 +200,7 @@ export default defineComponent({
 
     const popgreen = () => {
       const popin = document.querySelector('.owl-popin');
-      console.log(popin);
+      // console.log(popin);
       popin?.classList.add('owl-green');
       popin?.classList.add('owl-green-transition');
       setTimeout(() => {
@@ -181,7 +211,7 @@ export default defineComponent({
 
     const popbronze = () => {
       const pop = document.querySelector('.owl-pop');
-      console.log(pop);
+      // console.log(pop);
       // pop?.classList.add('owl-green');
       pop?.classList.add('owl-bronze');
       setTimeout(() => {
@@ -196,7 +226,8 @@ export default defineComponent({
       setInterval(popbronze, 5000);
     };
 
-    loopOwls();
+    // loopOwls();
+    hatchedEggs();
 
     onMounted(async () => {
       if (await Metamask.detectingChain()) {
@@ -204,6 +235,7 @@ export default defineComponent({
         Metamask.detectingAccount();
       }
       loopOwls();
+      // hatchedEggs();
     });
 
     return {
@@ -215,6 +247,7 @@ export default defineComponent({
       activeAddress,
       totalBuy,
       loopOwls,
+      totalMint,
     };
   },
 });
@@ -352,10 +385,33 @@ export default defineComponent({
 
 .owl-green {
   bottom: 1rem;
-  right: -15rem;
+  right: -5rem;
   z-index: -1;
   width: 10rem;
   position: absolute;
   transform: rotateZ(45deg) ;
+}
+
+.totalMint {
+  margin-top: 5rem;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+}
+
+.hatched, .remnant, .sold {
+  background-color: #ecd963;
+  color: #000;
+  padding: 0.2rem 1rem;
+  border-radius: 0.2em;
+
+  & > h3 {
+    color: #000;
+  }
+}
+
+.remnant {
+  background-color: #ECEAE1;
 }
 </style>
